@@ -26,7 +26,8 @@ def parse_block(handle):
         # Block-specific cleanup
         if 'Conversations' in block_type:
             stats.remove('<->')
-            #stats[0] = stats[0].split(':')[1]
+            stats[0] = stats[0].split(':')
+            stats[1] = stats[1].split(':')
         elif block_type == 'Protocol Hierarchy Statistics':
             stats[1] = stats[1].split(':')[1]
             stats[2] = stats[2].split(':')[1]
