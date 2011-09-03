@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 try:
     import json # Try newer library first
@@ -26,6 +26,7 @@ def parse_block(handle):
         # Block-specific cleanup
         if 'Conversations' in block_type:
             stats.remove('<->')
+            #stats[0] = stats[0].split(':')[1]
         elif block_type == 'Protocol Hierarchy Statistics':
             stats[1] = stats[1].split(':')[1]
             stats[2] = stats[2].split(':')[1]
@@ -34,6 +35,7 @@ def parse_block(handle):
 
 # Start of program
 if __name__ == '__main__':
+    #stdin = open(0, 'r') # Get a handle to stdin
     blocks = {} # Initialize stat blocks
     
     for line in stdin:
