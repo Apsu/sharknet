@@ -36,7 +36,6 @@ def parse_block(handle):
 
 # Start of program
 if __name__ == '__main__':
-    #stdin = open(0, 'r') # Get a handle to stdin
     blocks = {} # Initialize stat blocks
     
     for line in stdin:
