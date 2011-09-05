@@ -1,47 +1,42 @@
-#!/usr/bin/env python
-
-try:
-    import json # Try newer library first
-except ImportError:
-    import simplejson # Try older next, bomb if not found
+#!/usr/bin/env python2
 
 from sys import stdin
 
-def parse_block(handle):
-    block_type = handle.readline().strip()
-    filter_type = handle.readline().strip().replace('<No Filter>', '').replace('Filter:', '')
-    block = [filter_type] # Block starts with filter string
+from couchdb import Server
+from couchdb.mapping import timegm, datetime
 
-    handle.readline() # Skip empty line
+def parse_tcp_conversations(block_type):
+    filter_type = stdin.next().strip().replace('<No Filter>', '').replace('Filter:', '')
+    block = {'type': block_type, 'filter': filter_type, 'timestamp': timegm(datetime.utcnow().utctimetuple())*1000, 'events': []}
+    events = ['source_ip', 'source_port', 'dest_ip', 'dest_port', 'frames_in', 'bytes_in', 'frames_out', 'bytes_out', 'frames_total', 'bytes_total']
 
-    if 'Conversations' in block_type:
-        handle.readline() # Skip headers
-    
-    for line in handle:
+    stdin.next() # Skip empty line
+    stdin.next() # Skip headers
+
+    for line in stdin:
         if line[0] == '=': # End of block
-            return (block_type, block) # Tuple for dict
+            return block
 
-        stats = line.split() # Initial division
-        
-        # Block-specific cleanup
-        if 'Conversations' in block_type:
-            stats.remove('<->')
-            stats[0] = stats[0].split(':')
-            stats[1] = stats[1].split(':')
-        elif block_type == 'Protocol Hierarchy Statistics':
-            stats[1] = stats[1].split(':')[1]
-            stats[2] = stats[2].split(':')[1]
-            
-        block.append(stats) # Add to block
+        stats = sum([item.split(':') for item in line.split()], []) # Split and flatten
+        stats.remove('<->')
+        for i in range(len(stats)):
+            try:
+                stats[i] = long(stats[i])
+            except ValueError:
+                pass
+
+        block['events'].append(dict(zip(events, stats)))
 
 # Start of program
 if __name__ == '__main__':
-    blocks = {} # Initialize stat blocks
-    
+    couch = Server('http://localhost:5984')
+    db = couch['db']
+
     for line in stdin:
         if(line[0] == '='): # Start of block
-            blocks.update([parse_block(stdin)]) # Indexed by block_type
+            block_type = stdin.next().strip()
+            if 'TCP' in block_type: # TCP Conversations
+                block = parse_tcp_conversations(block_type) # Parse
+                db.create(block) # Add block to DB
         else:
             pass # Ignore anything else
-    
-    print(json.dumps(blocks))
