@@ -20,10 +20,8 @@ def parse_tcp_conversations(block_type):
         stats = sum([item.split(':') for item in line.split()], []) # Split and flatten
         stats.remove('<->')
         for i in range(len(stats)):
-            try:
-                stats[i] = long(stats[i])
-            except ValueError:
-                pass
+            try: stats[i] = long(stats[i])
+            except ValueError: pass
 
         block['events'].append(dict(zip(events, stats)))
 
