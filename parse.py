@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 
+import platform
 from sys import stdin
 
 from couchdb import Server
@@ -7,7 +8,7 @@ from couchdb.mapping import datetime
 
 def parse_tcp_conversations(block_type):
     filter_type = stdin.next().strip().replace('<No Filter>', '').replace('Filter:', '')
-    block = {'type': block_type, 'filter': filter_type, 'timestamp': datetime.utcnow().utctimetuple()[0:6], 'events': []}
+    block = {'type': block_type, 'filter': filter_type, 'hostname': platform.node(),'timestamp': datetime.utcnow().utctimetuple()[0:6], 'events': []}
     events = ['source_ip', 'source_port', 'dest_ip', 'dest_port', 'frames_in', 'bytes_in', 'frames_out', 'bytes_out', 'frames_total', 'bytes_total']
 
     stdin.next() # Skip empty line
