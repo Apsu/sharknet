@@ -28,15 +28,15 @@ def parse_tcp_conversations(block_type):
 # Start of program
 if __name__ == '__main__':
     couch = Server('http://localhost:5984')
-    try: db = couch['db']
-    except: db = couch.create('db')
+    couch.resource.http.add_credentials('admin', 'admin') # Admin partay!
+    try: db = couch['db'] # Get DB if it exists
+    except: db = couch.create('db') # Create otherwise
 
     for line in stdin:
         if(line[0] == '='): # Start of block
             block_type = stdin.next().strip()
             if 'TCP' in block_type: # TCP Conversations
-                block = parse_tcp_conversations(block_type) # Parse
+                block = parse_tcp_conversations(block_type)
                 db.create(block) # Add block to DB
-                #print(block)
         else:
             pass # Ignore anything else
