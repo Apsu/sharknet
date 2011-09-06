@@ -3,11 +3,11 @@
 from sys import stdin
 
 from couchdb import Server
-from couchdb.mapping import timegm, datetime
+from couchdb.mapping import datetime
 
 def parse_tcp_conversations(block_type):
     filter_type = stdin.next().strip().replace('<No Filter>', '').replace('Filter:', '')
-    block = {'type': block_type, 'filter': filter_type, 'timestamp': timegm(datetime.utcnow().utctimetuple())*1000, 'events': []}
+    block = {'type': block_type, 'filter': filter_type, 'timestamp': datetime.utcnow().utctimetuple()[0:6], 'events': []}
     events = ['source_ip', 'source_port', 'dest_ip', 'dest_port', 'frames_in', 'bytes_in', 'frames_out', 'bytes_out', 'frames_total', 'bytes_total']
 
     stdin.next() # Skip empty line
@@ -28,7 +28,8 @@ def parse_tcp_conversations(block_type):
 # Start of program
 if __name__ == '__main__':
     couch = Server('http://localhost:5984')
-    db = couch['db']
+    try: db = couch['db']
+    except: db = couch.create('db')
 
     for line in stdin:
         if(line[0] == '='): # Start of block
@@ -36,5 +37,6 @@ if __name__ == '__main__':
             if 'TCP' in block_type: # TCP Conversations
                 block = parse_tcp_conversations(block_type) # Parse
                 db.create(block) # Add block to DB
+                #print(block)
         else:
             pass # Ignore anything else
