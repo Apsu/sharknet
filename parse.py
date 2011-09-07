@@ -5,14 +5,16 @@ import platform
 from couchdb import Server
 from couchdb.mapping import datetime
 
-def parse_tcp_conversations(block_type, handle, args):
+def parse_tcp(block_type, handle, args):
     filter_type = handle.next().strip().replace('<No Filter>', '').replace('Filter:', '')
+
     block = {'type': block_type,
              'filter': filter_type,
              'hostname': platform.node(),
              'duration': long(args[1]),
              'timestamp': datetime.utcnow().utctimetuple()[0:6],
              'events': []}
+
     events = ['source_ip',
               'source_port',
               'dest_ip',
@@ -41,13 +43,18 @@ def parse_tcp_conversations(block_type, handle, args):
 def dispatch(handle, db, args):
     block_type = handle.next().strip()
     if 'TCP' in block_type: # TCP Conversations
-        block = parse_tcp_conversations(block_type, handle, args)
-        db.create(block) # Add block to DB
-        #print(block)
+        block = parse_tcp(block_type, handle, args)
+        #db.create(block) # Add block to DB
+        print block
         
 # Start of program
 if __name__ == '__main__':
     from sys import stdin, argv
+
+    if not len(argv) == 2 or not argv[1].isdigit():
+        print 'Usage: Parse <seconds>'
+        print '  <seconds>    Duration of samples in seconds'
+        exit()
 
     couch = Server('http://localhost:5984')
     couch.resource.http.add_credentials('admin', 'admin') # Admin partay!
@@ -55,7 +62,8 @@ if __name__ == '__main__':
     except: db = couch.create('db') # Create otherwise
 
     for line in stdin:
-        if(line[0] == '='): # Start of block
+        if line[0] == '=': # Start of block
             dispatch(stdin, db, argv)
         else:
-            pass # Ignore anything else
+            print 'Invalid input line:'
+            print line
