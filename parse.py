@@ -11,7 +11,7 @@ def parse_tcp_conversations(block_type, duration):
     block = {'type': block_type,
              'filter': filter_type,
              'hostname': platform.node(),
-             'duration': duration,
+             'duration': long(duration),
              'timestamp': datetime.utcnow().utctimetuple()[0:6],
              'events': []}
     events = ['source_ip',
@@ -36,7 +36,7 @@ def parse_tcp_conversations(block_type, duration):
         stats.remove('<->') # Decruft
         stats = sum(map(lambda(x): x.split(':'), stats), []) # Split and flatten
         stats = map(lambda(x): x.isdigit() and long(x) or x, stats) # Convert numbers
-        stats[5:9] = map(lambda(x): long(x / duration), stats[5:9]) # Get average
+        #stats[5:9] = map(lambda(x): long(x / duration), stats[5:9]) # Get average
         block['events'].append(dict(zip(events, stats))) # Zip to dict and append
 
 # Start of program
@@ -50,7 +50,7 @@ if __name__ == '__main__':
         if(line[0] == '='): # Start of block
             block_type = stdin.next().strip()
             if 'TCP' in block_type: # TCP Conversations
-                block = parse_tcp_conversations(block_type, long(argv[1]))
+                block = parse_tcp_conversations(block_type, argv[1])
                 #db.create(block) # Add block to DB
                 print(block)
         else:
