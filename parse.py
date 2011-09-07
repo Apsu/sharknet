@@ -1,17 +1,16 @@
 #!/usr/bin/env python2
 
 import platform
-from sys import stdin, argv
 
 from couchdb import Server
 from couchdb.mapping import datetime
 
-def parse_tcp_conversations(block_type, duration):
-    filter_type = stdin.next().strip().replace('<No Filter>', '').replace('Filter:', '')
+def parse_tcp_conversations(block_type, handle, args):
+    filter_type = handle.next().strip().replace('<No Filter>', '').replace('Filter:', '')
     block = {'type': block_type,
              'filter': filter_type,
              'hostname': platform.node(),
-             'duration': long(duration),
+             'duration': long(args[1]),
              'timestamp': datetime.utcnow().utctimetuple()[0:6],
              'events': []}
     events = ['source_ip',
@@ -25,10 +24,10 @@ def parse_tcp_conversations(block_type, duration):
               'frames_total',
               'bytes_total']
 
-    stdin.next() # Skip empty line
-    stdin.next() # Skip headers
+    handle.next() # Skip empty line
+    handle.next() # Skip headers
 
-    for line in stdin:
+    for line in handle:
         if line[0] == '=': # End of block
             return block
 
@@ -39,8 +38,17 @@ def parse_tcp_conversations(block_type, duration):
         #stats[5:9] = map(lambda(x): long(x / duration), stats[5:9]) # Get average
         block['events'].append(dict(zip(events, stats))) # Zip to dict and append
 
+def dispatch(handle, db, args):
+    block_type = handle.next().strip()
+    if 'TCP' in block_type: # TCP Conversations
+        block = parse_tcp_conversations(block_type, handle, args)
+        db.create(block) # Add block to DB
+        #print(block)
+        
 # Start of program
 if __name__ == '__main__':
+    from sys import stdin, argv
+
     couch = Server('http://localhost:5984')
     couch.resource.http.add_credentials('admin', 'admin') # Admin partay!
     try: db = couch['db'] # Get DB if it exists
@@ -48,10 +56,6 @@ if __name__ == '__main__':
 
     for line in stdin:
         if(line[0] == '='): # Start of block
-            block_type = stdin.next().strip()
-            if 'TCP' in block_type: # TCP Conversations
-                block = parse_tcp_conversations(block_type, argv[1])
-                #db.create(block) # Add block to DB
-                print(block)
+            dispatch(stdin, db, argv)
         else:
             pass # Ignore anything else
