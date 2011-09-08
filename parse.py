@@ -44,8 +44,9 @@ def dispatch(handle, db, args):
     block_type = handle.next().strip()
     if 'TCP' in block_type: # TCP Conversations
         block = parse_tcp(block_type, handle, args)
-        db.create(block) # Add block to DB
-        #print block
+        if len(block['events']) > 0:
+            db.create(block) # Add block to DB
+            #print block
         
 # Start of program
 if __name__ == '__main__':
