@@ -38,7 +38,6 @@ def parse_tcp(block_type, handle, args):
         stats.remove('<->') # Decruft
         stats = sum(map(lambda(x): x.split(':'), stats), []) # Split and flatten
         stats = map(lambda(x): x.isdigit() and long(x) or x, stats) # Convert numbers
-        #stats[5:9] = map(lambda(x): long(x / duration), stats[5:9]) # Get average
         block['events'].append(dict(zip(events, stats))) # Zip to dict and append
 
 def dispatch(handle, db, args):
