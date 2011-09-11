@@ -11,7 +11,8 @@ def parse_tcp(block_type, handle, args):
     block = {'type': block_type,
              'filter': filter_type,
              'hostname': platform.node(),
-             'duration': long(args[1]),
+             'interface': args[1],
+             'duration': long(args[2]),
              'timestamp': datetime.utcnow().utctimetuple()[0:6],
              'events': []}
 
@@ -52,8 +53,9 @@ def dispatch(handle, db, args):
 if __name__ == '__main__':
     from sys import stdin, argv
 
-    if not len(argv) == 2 or not argv[1].isdigit():
-        print 'Usage: Parse <seconds>'
+    if not len(argv) == 3 or not argv[1].isalnum() or not argv[2].isdigit():
+        print 'Usage: Parse <interface> <seconds>'
+        print '  <interface>  Name of capture interface'
         print '  <seconds>    Duration of samples in seconds'
         exit()
 
