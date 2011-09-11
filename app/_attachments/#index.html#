@@ -12,11 +12,7 @@
     <body>
 
     <div id="placeholder" style="width:600px;height:300px;"></div>
-<!--
-    <p>
-      <input class="dataUpdate" type="button" value="Poll for data">
-    </p>
--->
+
 <script type="text/javascript">
 $(function () {
     var options = {
