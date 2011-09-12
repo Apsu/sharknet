@@ -1,12 +1,31 @@
 function graph () {
+    function byteFormatter(val, axis) {
+        var giga = Math.pow(10,9), mega = Math.pow(10,6), kilo = Math.pow(10,3);
+        if (val > giga)
+            return (val / giga).toFixed(2) + "GB";
+        else if (val > mega)
+            return (val / mega).toFixed(2) + "MB";
+        else if (val > kilo)
+            return (val / kilo).toFixed(2) + "kB";
+        else
+            return val.toFixed(false) + "B";
+    };
+
     var flot_options = {
-        lines: { show: true },
-        points: { show: true },
-        xaxis: { mode: "time" } //, timeformat: "%y/%m/%d %H:%M:%S" }
+        series: {
+            shadowSize: 0,
+            lines: { show: true, fill: false, lineWidth: 2 },
+            points: { show: false, fill: false }
+        },
+        grid: { hoverable: true, mouseActiveRadius: 50},
+        yaxis: { tickFormatter: byteFormatter },
+        xaxis: { mode: "time", timeformat: "%y/%0m/%d %h:%M" },
+        zoom: { interactive: true, amount: 1.5 },
+        pan: { interactive: true },
+        interaction: { redrawOverlayInterval: -1 }
     };
     
-    var flot_data = [];
-    var placeholder = $("#placeholder");
+    var plot, flot_data, placeholder = $("#placeholder");
     var auth = {
         name: "admin",
         password: "admin"
@@ -16,20 +35,69 @@ function graph () {
     $.couch.login(auth);    
     $db = $.couch.db("db");
 
-    $db.list("sharknet/flot", "by-dest-ip-total", {
-        success: function(data) {
-            console.log(data);
-        },
-        error: function(status) {
-            console.log(status);
-        },
-        limit: 10,
-        group: true
-        //group_level: 8,
-        //stale: "update_after",
+    $db.list("sharknet/flot", "by-dest-port-total", {
+        //limit: 10000,
+        group: true,
+        group_level: 7,
+        stale: "update_after"
         //startkey: ["loki", "10.0.0.1"],
         //endkey: ["loki", "10.0.0.75", []]
+    },
+             {
+                 success: function(data) {
+                     flot_data = data;
+                     plot = $.plot(placeholder, flot_data, flot_options);
+                 },
+                 error: function(status) {
+                     console.log(status);
+                 },
+             });
+
+    $("#clearSelection").click(function () {
+        plot.clearSelection();
+        plot = $.plot(placeholder, flot_data, flot_options);
     });
 
-    //setTimeout(fetchData, 1000);
+    function showTooltip(x, y, contents) {
+        $('<div id="tooltip">' + contents + '</div>').css( {
+            position: 'absolute',
+            display: 'none',
+            top: y + 5,
+            left: x + 5,
+            border: '1px solid #fdd',
+            padding: '2px',
+            'background-color': '#fee',
+            opacity: 0.90
+        }).appendTo("body").fadeIn(100);
+    }
+
+    placeholder.bind("plothover", function (event, pos, item) {
+        $("#x").text(pos.x.toFixed(2));
+        $("#y").text(pos.y.toFixed(2));
+        
+        if (item) {
+            if (previousPoint != item.dataIndex) {
+                previousPoint = item.dataIndex;
+                
+                $("#tooltip").remove();
+                var x = item.datapoint[0],
+                y = item.datapoint[1];
+                
+                showTooltip(item.pageX, item.pageY,
+                            function() {
+                                var d = new Date; 
+                                d.setTime(x);
+                                return d.getFullYear() + "/" +
+                                    d.getMonth() + "/" +
+                                    d.getDate() + " -- Port: " +
+                                    item.series.label + " = " + byteFormatter(y);
+                            }());
+            }
+        }
+        else {
+            $("#tooltip").remove();
+            previousPoint = null;            
+        }
+
+    });
 };
