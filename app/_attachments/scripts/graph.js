@@ -14,7 +14,7 @@ function graph () {
     var flot_options = {
         series: {
             shadowSize: 0,
-            lines: { show: true, fill: false, lineWidth: 2 },
+            lines: { show: true, fill: true, lineWidth: 1 },
             points: { show: false, fill: false }
         },
         grid: { hoverable: true, mouseActiveRadius: 50},
@@ -36,7 +36,7 @@ function graph () {
     $db = $.couch.db("db");
 
     $db.list("sharknet/flot", "by-dest-port-total", {
-        //limit: 10000,
+        limit: 1000,
         group: true,
         group_level: 7,
         stale: "update_after"
@@ -52,7 +52,11 @@ function graph () {
                      console.log(status);
                  },
              });
-
+/*
+    $.getJSON('data.js', function(data) {
+        $.plot(placeholder, data, flot_options);
+    });
+*/
     $("#clearSelection").click(function () {
         plot.clearSelection();
         plot = $.plot(placeholder, flot_data, flot_options);
@@ -66,8 +70,9 @@ function graph () {
             left: x + 5,
             border: '1px solid #fdd',
             padding: '2px',
-            'background-color': '#fee',
-            opacity: 0.90
+            color: '#fff',
+            'background-color': '#000',
+            opacity: 0.70
         }).appendTo("body").fadeIn(100);
     }
 
@@ -87,9 +92,11 @@ function graph () {
                             function() {
                                 var d = new Date; 
                                 d.setTime(x);
-                                return d.getFullYear() + "/" +
-                                    d.getMonth() + "/" +
-                                    d.getDate() + " -- Port: " +
+                                return d.getUTCFullYear() + "/" +
+                                    (d.getUTCMonth()+1) + "/" +
+                                    d.getUTCDate() + ", " +
+                                    d.getUTCHours() + ":" +
+                                    d.getUTCMinutes() + " -- Port: " +
                                     item.series.label + " = " + byteFormatter(y);
                             }());
             }
