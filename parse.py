@@ -1,6 +1,8 @@
 #!/usr/bin/env python2
 
 import platform
+import numpy
+from itertools import ifilter
 
 from couchdb import Server
 from couchdb.mapping import datetime
@@ -45,8 +47,13 @@ def dispatch(handle, db, args):
     if 'TCP' in block_type: # TCP Conversations
         block = parse_tcp(block_type, handle, args)
         if len(block['events']) > 0:
+            print block
+            bytes = [event['bytes_total'] for event in block['events']]
+            print bytes
+            stdev = numpy.std(bytes)
+            block['events'] = list(ifilter(lambda(x): x['bytes_total'] > stdev, block['events']))
             db.create(block) # Add block to DB
-            #print block
+            print block
         
 # Start of program
 if __name__ == '__main__':
