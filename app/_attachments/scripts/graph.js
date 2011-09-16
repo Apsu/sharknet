@@ -15,7 +15,7 @@ function graph () {
         series: {
             shadowSize: 0,
             lines: { show: true, fill: true, lineWidth: 1 },
-            points: { show: false, fill: false }
+            points: { show: true, fill: false }
         },
         grid: { hoverable: true, mouseActiveRadius: 50},
         yaxis: { tickFormatter: byteFormatter },

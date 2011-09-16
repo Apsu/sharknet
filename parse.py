@@ -29,8 +29,9 @@ def parse_tcp(block_type, handle, args):
               'frames_total',
               'bytes_total']
 
-    handle.next() # Skip empty line
-    handle.next() # Skip headers
+    # Skip headers
+    handle.next()
+    handle.next()
 
     for line in handle:
         if line[0] == '=': # End of block
@@ -47,13 +48,17 @@ def dispatch(handle, db, args):
     if 'TCP' in block_type: # TCP Conversations
         block = parse_tcp(block_type, handle, args)
         if len(block['events']) > 0:
-            print block
+            #print block
             bytes = [event['bytes_total'] for event in block['events']]
-            print bytes
+            #bytes.sort()
             stdev = numpy.std(bytes)
+            print numpy.average(bytes)
+            print numpy.mean(bytes)
+            print numpy.median(bytes)
+            print stdev
             block['events'] = list(ifilter(lambda(x): x['bytes_total'] > stdev, block['events']))
-            db.create(block) # Add block to DB
-            print block
+            #db.create(block) # Add block to DB
+            #print block
         
 # Start of program
 if __name__ == '__main__':
