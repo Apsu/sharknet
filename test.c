@@ -1,12 +1,3 @@
-/* Copyright (c) 2002 Gianni Tedesco
- * Released under the terms of the GNU GPL version 2
- * mmap() packet socket based packet sniffer
- */
-
-#ifndef __linux__
-#error "Are you loco? This is Linux only!"
-#endif
-
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -28,7 +19,6 @@
 #include <linux/sockios.h>
 #include <string.h>
 #include <netinet/in.h>
-//#include <asm/system.h>
 #include <signal.h>
 
 char *names[]={
@@ -91,9 +81,9 @@ int main ( int argc, char **argv )
    * 
    */
   req.tp_block_size=8388608; // power of 2
-  req.tp_frame_size=2048; // multiple of TPACKET_ALIGNMENT (16) > TPACKET_HDRLEN (if_packet.h)
-  req.tp_block_nr=256; // 
-  req.tp_frame_nr=1048576; // tp_block_size/tp_frame_size * tp_block_nr
+  req.tp_frame_size=2048;    // multiple of TPACKET_ALIGNMENT (16) > TPACKET_HDRLEN (if_packet.h)
+  req.tp_block_nr=128;       // <= block-num at max, power of 2
+  req.tp_frame_nr=524288;   // tp_block_size/tp_frame_size * tp_block_nr
   if ( (setsockopt(fd,
 		   SOL_PACKET,
 		   PACKET_RX_RING,
@@ -131,7 +121,7 @@ int main ( int argc, char **argv )
   /* bind the packet socket */
   memset(&addr, 0, sizeof(addr));
   addr.sll_family=AF_PACKET;
-  addr.sll_protocol=htons(0x03);
+  addr.sll_protocol=htons(ETH_P_IP);
   addr.sll_ifindex=s_ifr.ifr_ifindex;
   addr.sll_hatype=0;
   addr.sll_pkttype=0;
