@@ -49,15 +49,15 @@ def dispatch(handle, db, args):
         block = parse_tcp(block_type, handle, args)
         if len(block['events']) > 0:
             #print block
-            bytes = [event['bytes_total'] for event in block['events']]
+            #bytes = [event['bytes_total'] for event in block['events']]
             #bytes.sort()
-            stdev = numpy.std(bytes)
-            print numpy.average(bytes)
-            print numpy.mean(bytes)
-            print numpy.median(bytes)
-            print stdev
-            block['events'] = list(ifilter(lambda(x): x['bytes_total'] > stdev, block['events']))
-            #db.create(block) # Add block to DB
+            #stdev = numpy.std(bytes)
+            #print numpy.average(bytes)
+            #print numpy.mean(bytes)
+            #print numpy.median(bytes)
+            #print stdev
+            #block['events'] = list(ifilter(lambda(x): x['bytes_total'] > stdev, block['events']))
+            db.create(block) # Add block to DB
             #print block
         
 # Start of program
