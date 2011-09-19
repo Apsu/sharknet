@@ -1,5 +1,5 @@
 fun({Doc}) ->
-  Get = fun(K, P) -> proplists:get_value(K, P) end,
+  Get = fun(K, V) -> proplists:get_value(K, V) end,
   case Get(<<"type">>, Doc) of
     <<"TCP Conversations">> ->
       [Year, Month, Day, Hour, Minute, Second | _] = Get(<<"timestamp">>, Doc),

@@ -35,8 +35,8 @@ function graph () {
     $.couch.login(auth);    
     $db = $.couch.db("db");
 
-    $db.list("sharknet/flot", "by-dest-port-total", {
-        limit: 1000,
+    $db.list("sharknet/flot", "erlang", {
+        //limit: 1000,
         group: true,
         group_level: 7,
         stale: "update_after"
