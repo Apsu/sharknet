@@ -36,11 +36,15 @@ fun(Head, {Req}) ->
   end,
 
   Deep = fun(Elem, {Flag, Acc}) ->
-    case Flag of
-      false ->
-	{true, Acc ++ <<"[",Elem,",">>};
-      true ->
-	{false, Acc ++ <<Elem,"]">>} 
+    Log(integer_to_list(Elem)),
+    Val = Elem,
+    case {Flag,Acc} of
+      {false, nil} ->
+        {true, <<"[", Val, ",">>};
+      {false, _} ->
+        {true, <<",[", Val, ",">>};
+      _ ->
+        {false, <<Acc/binary, Val, "]">>}
     end
   end,
 
@@ -56,7 +60,7 @@ fun(Head, {Req}) ->
         _ -> ok
       end,
       Send(<<"{\"label\":\"", Key/binary, "\",\"data\":">>),
-      {_, Bin} = lists:foldl(Deep, {false, <<"">>}, Value),
+      {_, Bin} = lists:foldl(Deep, {false, nil}, lists:flatten(Value)),
       Send(Bin),
       Send(<<"}">>),
       <<",">>
