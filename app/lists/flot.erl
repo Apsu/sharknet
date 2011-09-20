@@ -1,5 +1,6 @@
 fun(Head, {Req}) ->
-%%  Start({[{<<"headers">>,{[{<<"Content-Type">>,<<"text/plain">>}]}}]}),
+%  Start({[{<<"headers">>, {[{<<"Content-Type">>, <<"text/plain">>}]}}]}),
+
   Stamp = fun(Fields) ->
     case length(Fields) of
       1 -> [Year] = Fields,
@@ -25,19 +26,32 @@ fun(Head, {Req}) ->
   end,
 
   Fold = fun({Row}, Dict) ->
-    {[{<<"key">>, Key}, {<<"value">>, Value}]} = {Row},
+    {[{<<"key">>, Key}, {<<"value">>, Bytes}]} = {Row},
     [Hostname, DestIP | Timestamp] = Key, %% group_level >= 2
     Unix = Epoch(Stamp(Timestamp)),
-    {ok, dict:update_counter(Unix, Value, Dict)}
+    case dict:find(DestIP, Dict) of
+      {ok, Data} ->
+        {ok, dict:store(DestIP, Data ++ [[Unix, Bytes]], Dict)};
+      _ ->
+        {ok, dict:store(DestIP, [[Unix, Bytes]], Dict)}
+    end
   end,
 
-%%    Send({[{<<"label">>, DestIP}, {<<"series">>, integer_to_list(Epoch(DateTime))}]}),
-
   {ok, Stats} = FoldRows(Fold, dict:new()),
-  {_} = dict:fold(
-    fun(K, V, A) ->
-      Send(integer_to_list(V)),
-      nil
-    end
-    , nil, Stats)
+
+  Send(<<"{[">>),
+
+  dict:fold(
+    fun(Key, Value, In) ->
+      case In of
+        <<",">> ->
+          Send(In);
+        _ -> ok
+      end,
+      Send(<<"{\"label\":\"", Key/binary, "\",\"data\":[[1,1]]}">>),
+      Log(list_to_binary(Value)),
+      <<",">>
+    end, nil, Stats),
+
+  <<"]}">>
 end.
