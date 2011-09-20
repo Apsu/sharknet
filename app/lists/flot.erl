@@ -34,7 +34,7 @@ fun(Head, {Req}) ->
 %%    Send({[{<<"label">>, DestIP}, {<<"series">>, integer_to_list(Epoch(DateTime))}]}),
 
   {ok, Stats} = FoldRows(Fold, dict:new()),
-  dict:fold(
+  {_} = dict:fold(
     fun(K, V, A) ->
       Send(integer_to_list(V)),
       nil
