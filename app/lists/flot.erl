@@ -1,6 +1,4 @@
 fun(Head, {Req}) ->
-%  Start({[{<<"headers">>, {[{<<"Content-Type">>, <<"text/plain">>}]}}]}),
-
   Stamp = fun(Fields) ->
     case length(Fields) of
       1 -> [Year] = Fields,
@@ -37,6 +35,15 @@ fun(Head, {Req}) ->
     end
   end,
 
+  Deep = fun(Elem, {Flag, Acc}) ->
+    case Flag of
+      false ->
+	{true, Acc ++ <<"[",Elem,",">>};
+      true ->
+	{false, Acc ++ <<Elem,"]">>} 
+    end
+  end,
+
   {ok, Stats} = FoldRows(Fold, dict:new()),
 
   Send(<<"{[">>),
@@ -48,8 +55,10 @@ fun(Head, {Req}) ->
           Send(In);
         _ -> ok
       end,
-      Send(<<"{\"label\":\"", Key/binary, "\",\"data\":[[1,1]]}">>),
-      Log(list_to_binary(Value)),
+      Send(<<"{\"label\":\"", Key/binary, "\",\"data\":">>),
+      {_, Bin} = lists:foldl(Deep, {false, <<"">>}, Value),
+      Send(Bin),
+      Send(<<"}">>),
       <<",">>
     end, nil, Stats),
 
