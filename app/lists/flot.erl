@@ -25,32 +25,31 @@ fun(Head, {Req}) ->
 
   Fold = fun({Row}, Dict) ->
     {[{<<"key">>, Key}, {<<"value">>, Bytes}]} = {Row},
-    [Hostname, DestIP | Timestamp] = Key, %% group_level >= 2
-    Unix = Epoch(Stamp(Timestamp)),
-    case dict:find(DestIP, Dict) of
+    [Hostname, Series | Timestamp] = Key,
+    Unix = Epoch(Stamp(Timestamp)) * 1000, % For javascript
+    case dict:find(Series, Dict) of
       {ok, Data} ->
-        {ok, dict:store(DestIP, Data ++ [[Unix, Bytes]], Dict)};
+        {ok, dict:store(Series, Data ++ [[Unix, Bytes]], Dict)};
       _ ->
-        {ok, dict:store(DestIP, [[Unix, Bytes]], Dict)}
+        {ok, dict:store(Series, [[Unix, Bytes]], Dict)}
     end
   end,
 
   Deep = fun(Elem, {Flag, Acc}) ->
-    Log(integer_to_list(Elem)),
-    Val = Elem,
-    case {Flag,Acc} of
+    Val = list_to_binary(integer_to_list(Elem)),
+    case {Flag, Acc} of
       {false, nil} ->
-        {true, <<"[", Val, ",">>};
-      {false, _} ->
-        {true, <<",[", Val, ",">>};
+        {true, <<"[", Val/binary, ",">>};
+      {false, _}->
+        {true, <<Acc/binary, ",[", Val/binary, ",">>};
       _ ->
-        {false, <<Acc/binary, Val, "]">>}
+        {false, <<Acc/binary, Val/binary, "]">>}
     end
   end,
 
   {ok, Stats} = FoldRows(Fold, dict:new()),
 
-  Send(<<"{[">>),
+  Send(<<"{\"series\":[">>),
 
   dict:fold(
     fun(Key, Value, In) ->
@@ -59,10 +58,10 @@ fun(Head, {Req}) ->
           Send(In);
         _ -> ok
       end,
-      Send(<<"{\"label\":\"", Key/binary, "\",\"data\":">>),
+      B = list_to_binary(integer_to_list(Key)),
+      Send(<<"{\"label\":\"", B/binary, "\",\"data\":[">>),
       {_, Bin} = lists:foldl(Deep, {false, nil}, lists:flatten(Value)),
-      Send(Bin),
-      Send(<<"}">>),
+      Send(<<Bin/binary, "]}">>),
       <<",">>
     end, nil, Stats),
 

@@ -14,12 +14,12 @@ function graph () {
     var flot_options = {
         series: {
             shadowSize: 0,
-            lines: { show: true, fill: true, lineWidth: 1 },
+            lines: { show: true, fill: true, lineWidth: 2 },
             points: { show: true, fill: false }
         },
         grid: { hoverable: true, mouseActiveRadius: 50},
         yaxis: { tickFormatter: byteFormatter },
-        xaxis: { mode: "time", timeformat: "%y/%0m/%d %h:%M" },
+        xaxis: { mode: "time"}, // timeformat: "%h:%M" },
         zoom: { interactive: true, amount: 1.5 },
         pan: { interactive: true },
         interaction: { redrawOverlayInterval: -1 }
@@ -36,16 +36,16 @@ function graph () {
     $db = $.couch.db("db");
 
     $db.list("sharknet/flot", "erlang", {
-        //limit: 1000,
+        limit: 1000,
         group: true,
-        group_level: 7,
-        stale: "update_after"
+        group_level: 7
+        //stale: "update_after"
         //startkey: ["loki", "10.0.0.1"],
         //endkey: ["loki", "10.0.0.75", []]
     },
              {
                  success: function(data) {
-                     flot_data = data;
+                     flot_data = data['series'];
                      plot = $.plot(placeholder, flot_data, flot_options);
                  },
                  error: function(status) {

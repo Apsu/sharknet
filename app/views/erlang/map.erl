@@ -6,9 +6,9 @@ fun({Doc}) ->
       Hostname = Get(<<"hostname">>, Doc),
       Duration = Get(<<"duration">>, Doc),
       lists:foreach(fun({Row}) ->
-        DestIP = Get(<<"dest_ip">>, Row),
+        Value = Get(<<"dest_port">>, Row),
         BytesTotal = Get(<<"bytes_total">>, Row),
-        Emit([Hostname, DestIP, Year, Month, Day, Hour, Minute, Second], round(BytesTotal / Duration))
+        Emit([Hostname, Value, Year, Month, Day, Hour, Minute, Second], round(BytesTotal / Duration))
       end, Get(<<"events">>, Doc));
     _ ->
       ok
