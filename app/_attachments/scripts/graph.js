@@ -36,7 +36,7 @@ function graph () {
     $db = $.couch.db("db");
 
     $db.list("sharknet/flot", "erlang", {
-        limit: 1000,
+        //limit: 100000,
         group: true,
         group_level: 7
         //stale: "update_after"
