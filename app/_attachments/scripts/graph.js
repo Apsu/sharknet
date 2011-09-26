@@ -1,11 +1,11 @@
 function graph () {
     function byteFormatter(val, axis) {
         var giga = Math.pow(10,9), mega = Math.pow(10,6), kilo = Math.pow(10,3);
-        if (val > giga)
+        if (Math.abs(val) > giga)
             return (val / giga).toFixed(2) + "GB";
-        else if (val > mega)
+        else if (Math.abs(val) > mega)
             return (val / mega).toFixed(2) + "MB";
-        else if (val > kilo)
+        else if (Math.abs(val) > kilo)
             return (val / kilo).toFixed(2) + "kB";
         else
             return val.toFixed(false) + "B";
@@ -36,12 +36,11 @@ function graph () {
     $db = $.couch.db("db");
 
     $db.list("sharknet/flot", "erlang", {
-        //limit: 100000,
         group: true,
-        group_level: 7
-        //stale: "update_after"
-        //startkey: ["loki", "10.0.0.1"],
-        //endkey: ["loki", "10.0.0.75", []]
+        group_level: 3,
+        stale: "update_after",
+        //startkey: ["", "", 0, 0],
+        endkey: [{}, {}, 2011]
     },
              {
                  success: function(data) {
@@ -52,11 +51,7 @@ function graph () {
                      console.log(status);
                  },
              });
-/*
-    $.getJSON('data.js', function(data) {
-        $.plot(placeholder, data, flot_options);
-    });
-*/
+
     $("#clearSelection").click(function () {
         plot.clearSelection();
         plot = $.plot(placeholder, flot_data, flot_options);
@@ -106,5 +101,9 @@ function graph () {
             previousPoint = null;            
         }
 
+    });
+
+    $("#yearly").click(function() {
+	
     });
 };
