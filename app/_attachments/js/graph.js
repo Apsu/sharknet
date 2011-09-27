@@ -22,8 +22,10 @@ function graph () {
     
     // Set default options
     var list_opts = {
-	group: true,
-	stale: "update_after"
+        group: true,
+        stale: "update_after",
+	startkey: [],
+	endkey: []
     };
 
     var list_funcs = {
@@ -32,7 +34,8 @@ function graph () {
             $.plot($("#placeholder"), flot_data, flot_opts);
         },
         error: function(status) {
-            console.log(status);
+            flot_data = null;
+	    console.log(status);
         }
     };
 
@@ -90,80 +93,77 @@ function graph () {
     };
 
     $(function() {
-	var dates = $( "#from, #to" ).datepicker({
-	    defaultDate: "+1d",
-	    changeMonth: true,
-	    numberOfMonths: 1,
-	    onSelect: function( selectedDate ) {
-		var option = this.id == "from" ? "minDate" : "maxDate",
-		instance = $( this ).data( "datepicker" ),
-		date = $.datepicker.parseDate(
-		    instance.settings.dateFormat ||
-			$.datepicker._defaults.dateFormat,
-		    selectedDate, instance.settings );
-		dates.not( this ).datepicker( "option", option, date );
-	    }
-	});
+        var dates = $("#from, #to").datepicker({
+            defaultDate: "+1d",
+            changeMonth: true,
+            numberOfMonths: 1,
+            onSelect: function(selectedDate) {
+                var option = this.id == "from" ? "minDate" : "maxDate",
+                instance = $(this).data("datepicker"),
+                date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
+                dates.not(this).datepicker("option", option, date);
+            }
+        });
     });
 
     function update() {
-	$db.list("sharknet/flot", "by-port", list_opts, list_funcs);
+        $db.list("sharknet/flot", "by-port", list_opts, list_funcs);
         $.plot($("#placeholder"), flot_data, flot_opts);
     };
 
     $("#year").click(function() {
-	//list_opts["startkey"] = [ ];
-	list_opts["endkey"] = [[]];
-	list_opts["group_level"] = 3;
-	flot_opts["xaxis"]["timeformat"] = "%y";
-	//flot_opts["xaxis"]["minTickSize"] = [10, "year"];
-	update();
+        list_opts["startkey"] = ["","", dateFormat($("#from").val(), "yyyy")];
+        list_opts["endkey"] = [{}, {}, dateFormat($("#to").val(), "yyyy")];
+        list_opts["group_level"] = 3;
+        flot_opts["xaxis"]["timeformat"] = "%y";
+        //flot_opts["xaxis"]["minTickSize"] = [10, "year"];
+        update();
+	alert(flot_data);
     });
 
     $("#month").click(function() {
-	//list_opts["startkey"] = [ ];
-	list_opts["endkey"] = [[]];
-	list_opts["group_level"] = 4;
-	flot_opts["xaxis"]["timeformat"] = "%m/%y";
-	flot_opts["xaxis"]["minTickSize"] = [1, "month"];
-	update();
+        list_opts["startkey"] = ["","", dateFormat($("#from").val(), "yyyy"), dateFormat($("#from").val(), "m")];
+        list_opts["endkey"] = [{}, {}, dateFormat($("#to").val(), "yyyy"), dateFormat($("#to").val(), "m")];
+        list_opts["group_level"] = 4;
+        flot_opts["xaxis"]["timeformat"] = "%m/%y";
+        flot_opts["xaxis"]["minTickSize"] = [1, "month"];
+        update();
     });
 
     $("#day").click(function() {
-	//list_opts["startkey"] = [ ];
-	list_opts["endkey"] = [[]];
-	list_opts["group_level"] = 5;
-	flot_opts["xaxis"]["timeformat"] = "%m/%d/%y";
-	flot_opts["xaxis"]["minTickSize"] = [1, "day"];
-	update();
+        //list_opts["startkey"] = [ ];
+        list_opts["endkey"] = [[]];
+        list_opts["group_level"] = 5;
+        flot_opts["xaxis"]["timeformat"] = "%m/%d/%y";
+        flot_opts["xaxis"]["minTickSize"] = [1, "day"];
+        update();
     });
 
     $("#hour").click(function() {
-	//list_opts["startkey"] = [ ];
-	list_opts["endkey"] = [[]];
-	list_opts["group_level"] = 6;
-	flot_opts["xaxis"]["timeformat"] = "%m/%d %H:%M";
-	flot_opts["xaxis"]["minTickSize"] = [1, "hour"];
-	update();
+        //list_opts["startkey"] = [ ];
+        list_opts["endkey"] = [[]];
+        list_opts["group_level"] = 6;
+        flot_opts["xaxis"]["timeformat"] = "%m/%d %H:%M";
+        flot_opts["xaxis"]["minTickSize"] = [1, "hour"];
+        update();
     });
     
     $("#minute").click(function() {
-	//list_opts["startkey"] = [ ];
-	list_opts["endkey"] = [[]];
-	list_opts["group_level"] = 7;
-	flot_opts["xaxis"]["timeformat"] = "%H:%M";
-	flot_opts["xaxis"]["minTickSize"] = [1, "minute"];
-	update();
+        //list_opts["startkey"] = [ ];
+        list_opts["endkey"] = [[]];
+        list_opts["group_level"] = 7;
+        flot_opts["xaxis"]["timeformat"] = "%H:%M";
+        flot_opts["xaxis"]["minTickSize"] = [1, "minute"];
+        update();
     });
 
     /* CODE STARTS HERE LOL */
     $("#from, #to").val(dateFormat(Date(), "UTC:m/d/yyyy"));
-
-    $("#placeholder").bind("plothover", hoverFunc);
 
     $.couch.urlPrefix = "http://localhost:5984";
     $.couch.login(auth);    
     $db = $.couch.db("db");
 
     $("#year").click();
+    $("#placeholder").bind("plothover", hoverFunc);
 };
