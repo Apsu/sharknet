@@ -27,6 +27,7 @@ fun(Head, {Req}) ->
     {[{<<"key">>, Key}, {<<"value">>, Bytes}]} = {Row},
     [Hostname, Series | Timestamp] = Key,
     Unix = Epoch(Stamp(Timestamp)) * 1000, % For javascript
+
     case dict:find(Series, Dict) of
       {ok, Data} ->
         {ok, dict:store(Series, Data ++ [[Unix, Bytes]], Dict)};
@@ -37,6 +38,7 @@ fun(Head, {Req}) ->
 
   Deep = fun(Elem, {Flag, Acc}) ->
     Val = list_to_binary(integer_to_list(Elem)),
+
     case {Flag, Acc} of
       {false, nil} ->
         {true, <<"[", Val/binary, ",">>};
@@ -49,7 +51,7 @@ fun(Head, {Req}) ->
 
   {ok, Stats} = FoldRows(Fold, dict:new()),
 
-  Send(<<"{\"series\":[">>),
+  Send(<<"[">>),
 
   dict:fold(
     fun(Key, Value, In) ->
@@ -65,5 +67,5 @@ fun(Head, {Req}) ->
       <<",">>
     end, nil, Stats),
 
-  <<"]}">>
+  <<"]">>
 end.
