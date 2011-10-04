@@ -28,12 +28,13 @@ fun(Head, {Req}) ->
     [Hostname, Series | Timestamp] = Key,
     Unix = Epoch(Stamp(Timestamp)) * 1000, % For javascript
 
-    case dict:find(Series, Dict) of
-      {ok, Data} ->
-        {ok, dict:store(Series, Data ++ [[Unix, Bytes]], Dict)};
-      _ ->
-        {ok, dict:store(Series, [[Unix, Bytes]], Dict)}
-    end
+    {ok, dict:update(Series, fun(Data) -> [Data|[Unix, Bytes]] end, [Unix, Bytes], Dict)}
+    %case dict:find(Series, Dict) of
+    %  {ok, Data} ->
+    %    {ok, dict:store(Series, [Data|[Unix, Bytes]], Dict)};
+    %  _ ->
+    %    {ok, dict:store(Series, [[Unix, Bytes]], Dict)}
+    %end
   end,
 
   Deep = fun(Elem, {Flag, Acc}) ->
@@ -65,7 +66,8 @@ fun(Head, {Req}) ->
       {_, Bin} = lists:foldl(Deep, {false, nil}, lists:flatten(Value)),
       Send(<<Bin/binary, "]}">>),
       <<",">>
-    end, nil, Stats),
+    end,
+  nil, Stats),
 
   <<"]">>
 end.
