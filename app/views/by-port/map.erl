@@ -5,13 +5,14 @@ fun({Doc}) ->
     <<"TCP Conversations">> ->
       Hostname = Get(<<"hostname">>, Doc),
       Duration = Get(<<"duration">>, Doc),
+      Interface = Get(<<"interface">>, Doc),
       Timestamp = Get(<<"timestamp">>, Doc),
 
       lists:foreach(
         fun({Row}) ->
           Value = Get(<<"dest_port">>, Row),
           BytesTotal = Get(<<"bytes_total">>, Row),
-          Emit([Hostname|Timestamp], [Value, round(BytesTotal / Duration)])
+          Emit([Hostname, Interface|Timestamp], [Value, round(BytesTotal / Duration)])
         end, Get(<<"events">>, Doc));
     _ ->
       ok
