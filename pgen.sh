@@ -1,11 +1,13 @@
 #!/bin/zsh
-# $1 Rate in packets per s
+
+# $1 Rate in pps
 # $2 Number of CPUs to use
 # $3 Number of packets
 # $4 Packet size
 # $5 Interface to use
 # $6 Destination IP
 # $7 Destination MAC
+
 function pgset() {
     local result
     echo $1 > $PGDEV
@@ -15,9 +17,9 @@ function pgset() {
 CPUS=$2
 RATEP=`echo "scale=0; $1/$CPUS" | bc`
 PKTS=`echo "scale=0; $3/$CPUS" | bc`
-CLONE_SKB="clone_skb $3"
-PKT_SIZE="pkt_size $4"
+CLONE_SKB="clone_skb $PKTS"
 COUNT="count $PKTS"
+PKT_SIZE="pkt_size $4"
 ETH=$5
 IP=$6
 MAC=$7
@@ -41,11 +43,12 @@ PGDEV=/proc/net/pktgen/$ETH@$processor
  pgset "flag QUEUE_MAP_CPU"
  pgset "$CLONE_SKB"
  pgset "$PKT_SIZE"
- pgset "ratep $RATEP"
+ #pgset "ratep $RATEP"
+ pgset "delay 0"
  pgset "dst $IP" 
  pgset "dst_mac $MAC"
- #pgset "flows 1024"
- #pgset "flowlen 8"
+ pgset "flows 1024"
+ pgset "flowlen 8"
 done
 
 # Time to run

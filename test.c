@@ -21,6 +21,8 @@
 #include <netinet/in.h>
 #include <signal.h>
 
+#define MAX_ORDER 11   // default for x86_64 from kernel linux/mmzone.h header
+
 char *names[]={
   "<", /* incoming */
   "B", /* broadcast */
@@ -61,29 +63,31 @@ int main ( int argc, char **argv )
   signal(SIGINT, sigproc);
 
   /* Open the packet socket */
-  if ( (fd=socket(PF_PACKET, SOCK_DGRAM, 0))<0 ) {
+  if ( (fd=socket(PF_PACKET, SOCK_RAW, 0))<0 ) {
     perror("socket()");
     return 1;
   }
 
   /* Setup the fd for mmap() ring buffer */
+
   /* size-max:   8192     /proc/slabinfo kmalloc-<size>
    * ptr-size:   8        sizeof(void *)
    * page-size:  4096     getpagesize()
    * max-order:  11       mmzone.h kernel header
    * frame-size: 2048
    * --
-   * block-num: size-max / ptr-size = 1024
-   * block-size: page-size << max-order = 8388608 (8MB)
+   * block-num: size-max / ptr-size
+   * block-size: page-size << max-order
    * --
-   * max-buffer: block-num * block-size = 8589934592 (8GB)
-   * frame-num: max-buffer / frame-size = 4194304 (4M)
+   * max-buffer: block-num * block-size
+   * frame-num: max-buffer / frame-size
    * 
    */
-  req.tp_block_size=8388608; // power of 2
+
+  req.tp_block_size=getpagesize() << (MAX_ORDER-1); // power of 2
   req.tp_frame_size=2048;    // multiple of TPACKET_ALIGNMENT (16) > TPACKET_HDRLEN (if_packet.h)
   req.tp_block_nr=128;       // <= block-num at max, power of 2
-  req.tp_frame_nr=524288;   // tp_block_size/tp_frame_size * tp_block_nr
+  req.tp_frame_nr=req.tp_block_size / req.tp_frame_size * req.tp_block_nr;
   if ( (setsockopt(fd,
 		   SOL_PACKET,
 		   PACKET_RX_RING,
@@ -139,11 +143,11 @@ int main ( int argc, char **argv )
       struct sockaddr_ll *sll=(void *)h + TPACKET_ALIGN(sizeof(*h));
       unsigned char *bp=(unsigned char *)h + h->tp_mac;
       /*
-      printf("%u.%.6u: if%u %s %u bytes\n",
-	     h->tp_sec, h->tp_usec,
-	     sll->sll_ifindex,
-	     names[sll->sll_pkttype],
-	     h->tp_len);
+        printf("%u.%.6u: if%u %s %u bytes\n",
+        h->tp_sec, h->tp_usec,
+        sll->sll_ifindex,
+        names[sll->sll_pkttype],
+        h->tp_len);
       */
       /* tell the kernel this packet is done with */
       h->tp_status=0;
